@@ -1,8 +1,9 @@
 package de.felix.game.rendering.camera;
 
-import de.felix.game.GameData;
+import de.felix.game.input.KeyboardInput;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -10,19 +11,14 @@ public class Camera {
     private final Matrix4f view;
     private final Matrix4f projection;
 
-    private Vector3f position;
+    private final Vector3f position;
 
-    private Vector3f rotation;
-
-    private float moveSpeed;
-    private float mouseSensitivity = .1f;
     private float oldMouseX;
     private float oldMouseY;
 
     private float yaw, pitch;
 
     public Camera() {
-        this.rotation = new Vector3f(0,0,0);
         position = new Vector3f(0, 0, -3);
         view = new Matrix4f();
         projection = new Matrix4f();
@@ -33,38 +29,27 @@ public class Camera {
         projection.frustum(-1, 1, -1, 1, 1, -1);
     }
 
-    public void update(long window) {
+    public void update(final KeyboardInput keyboardInput, long window, float deltaTime) {
 
-        float speed = 0.25f;
+        float speed = 4f;
 
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            move(speed * (float) Math.sin(Math.toRadians(yaw)), 0, -speed * (float) Math.cos(Math.toRadians(yaw)));
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            move(-speed * (float) Math.sin(Math.toRadians(yaw)), 0, speed * (float) Math.cos(Math.toRadians(yaw)));
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            move(-speed * (float) Math.cos(Math.toRadians(yaw - 90)), 0, -speed * (float) Math.sin(Math.toRadians(yaw - 90)));
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            move(speed * (float) Math.cos(Math.toRadians(yaw - 90)), 0, speed * (float) Math.sin(Math.toRadians(yaw - 90)));
-        }
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            move(0, speed, 0);
-        }
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-            move(0, -speed, 0);
-        }
+        if (pitch >= 80)
+            speed = 10;
+        else if (pitch <= -80)
+            speed = 10;
 
-        double[] xpos = new double[1];
-        double[] ypos = new double[1];
+        move(keyboardInput, deltaTime * (speed) * 10);
 
-        glfwGetCursorPos(window, xpos, ypos);
-        float newMouseX = (float) xpos[0];
-        float newMouseY = (float) ypos[0];
+        final double[] mouseX = new double[1];
+        final double[] mouseY = new double[1];
 
-        float dx = (newMouseX - oldMouseX) * mouseSensitivity;
-        float dy = (newMouseY - oldMouseY) * mouseSensitivity;
+        glfwGetCursorPos(window, mouseX, mouseY);
+        final float newMouseX = (float) mouseX[0];
+        final float newMouseY = (float) mouseY[0];
+
+        final float mouseSensitivity = .1f;
+        final float dx = (newMouseX - oldMouseX) * mouseSensitivity;
+        final float dy = (newMouseY - oldMouseY) * mouseSensitivity;
 
         oldMouseX = newMouseX;
         oldMouseY = newMouseY;
@@ -73,15 +58,40 @@ public class Camera {
     }
 
 
-    public void move(float dx, float dy, float dz) {
-        Vector3f direction = new Vector3f((float) Math.cos(Math.toRadians(yaw)), 0, (float) Math.sin(Math.toRadians(yaw)));
-        Vector3f right = new Vector3f((float) Math.sin(Math.toRadians(yaw - 90)), 0, (float) Math.cos(Math.toRadians(yaw - 90)));
-        Vector3f up = new Vector3f(0, 1, 0);
-
-        position.add(new Vector3f(direction).mul(dx));
-        position.add(new Vector3f(right).mul(dy));
-        position.add(new Vector3f(up).mul(dz));
+    public Vector3f getForwardDirection() {
+        Vector3f forward = new Vector3f();
+        forward.x = (float) Math.cos(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
+        forward.y = (float) Math.sin(Math.toRadians(pitch));
+        forward.z = (float) Math.sin(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
+        return forward;
     }
+
+    public Vector3f getRightDirection() {
+        Vector3f right = new Vector3f();
+        right.x = (float) -Math.sin(Math.toRadians(yaw));
+        right.y = 0;
+        right.z = (float) -Math.cos(Math.toRadians(yaw));
+        return right;
+    }
+
+
+    public void move(KeyboardInput keyboardInput, float deltaTime) {
+        float speed = 0.1f;
+
+        if (keyboardInput.isKeyPressed(GLFW.GLFW_KEY_W)) {
+            position.add(getForwardDirection().mul(speed * deltaTime));
+        }
+        if (keyboardInput.isKeyPressed(GLFW.GLFW_KEY_S)) {
+            position.sub(getForwardDirection().mul(speed * deltaTime));
+        }
+        if (keyboardInput.isKeyPressed(GLFW.GLFW_KEY_A)) {
+            position.sub(getRightDirection().mul(speed * deltaTime));
+        }
+        if (keyboardInput.isKeyPressed(GLFW.GLFW_KEY_D)) {
+            position.add(getRightDirection().mul(speed * deltaTime));
+        }
+    }
+
 
     public void updateProjection(int width, int height) {
         float aspectRatio = (float) width / (float) height;
@@ -107,7 +117,6 @@ public class Camera {
                 new Vector3f(position.x + directionX, position.y + directionY, position.z + directionZ),
                 new Vector3f(0, 1, 0));
     }
-
 
 
     public Matrix4f getView() {

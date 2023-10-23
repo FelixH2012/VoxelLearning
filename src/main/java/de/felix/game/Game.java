@@ -1,5 +1,6 @@
 package de.felix.game;
 
+import de.felix.game.input.KeyboardInput;
 import de.felix.game.rendering.camera.Camera;
 import de.felix.game.rendering.worldRenderer.WordRenderer;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -44,9 +45,9 @@ public class Game {
         glfwSetWindowPos(window, (videoMode.width() - gameData.width()) / 2, (videoMode.height() - gameData.height()) / 2);
 
         glfwShowWindow(window);
-
-
     }
+
+    double lastFrameTime = glfwGetTime();
 
     public void runGameLoop() {
         glfwMakeContextCurrent(window);
@@ -61,17 +62,23 @@ public class Game {
         });
 
 
+        final KeyboardInput keyboardInput = new KeyboardInput();
+        glfwSetKeyCallback(window, (window1, key, scancode, action, mods) -> keyboardInput.keyCallback(key, action));
 
         while (!glfwWindowShouldClose(window)) {
 
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-            camera.update(window);
+            final double currentFrameTime = glfwGetTime();
+            final float deltaTime = (float) (currentFrameTime - lastFrameTime);
+            lastFrameTime = currentFrameTime;
+
+            camera.update(keyboardInput, window, deltaTime);
 
             glfwPollEvents();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            wordRenderer.render(100, camera);
+            wordRenderer.render(50, camera);
 
             glfwSwapBuffers(window);
         }
