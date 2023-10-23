@@ -5,10 +5,9 @@ import de.felix.game.rendering.Rectangle;
 import de.felix.game.rendering.camera.Camera;
 import de.felix.game.shader.ShaderProgram;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL20;
 
 public class WordRenderer {
-
-    private ShaderProgram shaderProgram;
 
     public WordRenderer() {
 
@@ -23,14 +22,15 @@ public class WordRenderer {
             7, 6, 4, 7, 4, 5,
     };
 
+    private ShaderProgram shaderProgram;
+
     public void render(final int numberOfCubes, final Camera camera) {
+
         if (shaderProgram == null)
-            shaderProgram = new ShaderProgram("resources/vertexShader.glsl", "resources/fragmentShader.glsl");
-
-
+          shaderProgram =   new ShaderProgram("resources/vertexShader.glsl", "resources/fragmentShader.glsl");
         final FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-        noise.SetFractalGain(2.5f);
+        noise.SetFractalGain(.2f);
         noise.SetFractalWeightedStrength(0.5f);
 
         final double[] noiseForEachCube = new double[numberOfCubes];
@@ -42,7 +42,8 @@ public class WordRenderer {
         Vector3f[] cubePositions = new Vector3f[numberOfCubes];
         for (int i = 0; i < numberOfCubes; i++) {
             float x = (float) i;
-            float y = (float) (-5 + noiseForEachCube[i]);
+            float y = (float) (-5 + noiseForEachCube[i] * 100);
+
             float z = (float) i;
 
             cubePositions[i] = new Vector3f(x, y, z);
@@ -50,6 +51,7 @@ public class WordRenderer {
 
         final Rectangle[] rectangles = new Rectangle[numberOfCubes];
         for (int i = 0; i < numberOfCubes; i++) {
+
             rectangles[i] = new Rectangle(indices, shaderProgram, camera);
         }
         for (int lines = 0; lines < numberOfCubes; lines++) {
