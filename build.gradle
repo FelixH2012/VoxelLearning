@@ -9,9 +9,46 @@ repositories {
     mavenCentral()
 }
 
+project.ext.lwjglVersion = "3.3.1"
+
+sourceCompatibility = 17
+
+
+def os = System.getProperty('os.name').toLowerCase()
+
+if (os.contains('win')) {
+    project.ext.lwjglNatives = "natives-windows"
+} else if (os.contains('nix') || os.contains('nux')) {
+    project.ext.lwjglNatives = "natives-linux"
+} else {
+}
+
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.jetbrains:annotations:20.1.0'
+
+    implementation platform("org.lwjgl:lwjgl-bom:3.3.1")
+    testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.11'
+    implementation 'org.joml:joml:1.10.5'
+    implementation "org.lwjgl:lwjgl"
+    implementation "org.lwjgl:lwjgl-glfw"
+    implementation "org.lwjgl:lwjgl-nanovg"
+    implementation "org.lwjgl:lwjgl-openal"
+    implementation "org.lwjgl:lwjgl-opengl"
+    implementation "org.lwjgl:lwjgl-opengles"
+    implementation "org.lwjgl:lwjgl-stb"
+    implementation 'junit:junit:4.13.1'
+    runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-nanovg::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-openal::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-opengles::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
+
+    implementation group: 'org.tinylog', name: 'tinylog-api', version: '2.3.2'
+    implementation group: 'org.tinylog', name: 'tinylog-impl', version: '2.3.2'
 }
 
 test {
