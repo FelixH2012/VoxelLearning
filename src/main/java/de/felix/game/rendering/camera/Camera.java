@@ -119,6 +119,10 @@ public class Camera {
     }
 
 
+    public Vector3f getPosition() {
+        return position;
+    }
+
     public Matrix4f getView() {
         return view;
     }

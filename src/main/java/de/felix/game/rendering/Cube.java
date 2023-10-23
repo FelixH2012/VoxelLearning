@@ -10,7 +10,7 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-public class Rectangle {
+public class Cube {
 
     private final int[] indices;
     private final int vaoID;
@@ -18,7 +18,7 @@ public class Rectangle {
     private final Matrix4f model;
     private final Camera camera;
 
-    public Rectangle(int[] indices, ShaderProgram shaderProgram, Camera camera) {
+    public Cube(int[] indices, ShaderProgram shaderProgram, Camera camera) {
         this.indices = indices;
         this.shaderProgram = shaderProgram;
         this.model = new Matrix4f();

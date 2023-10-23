@@ -67,6 +67,11 @@ public class Game {
 
         while (!glfwWindowShouldClose(window)) {
 
+            if (keyboardInput.isKeyPressed(GLFW_KEY_ESCAPE))
+                glfwSetWindowShouldClose(window, true);
+            if (keyboardInput.isKeyPressed(GLFW_KEY_F11)) {
+                glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, 1920, 1080, 144);
+            }
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
             final double currentFrameTime = glfwGetTime();
@@ -78,7 +83,7 @@ public class Game {
             glfwPollEvents();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            wordRenderer.render(50, camera);
+            wordRenderer.render(camera);
 
             glfwSwapBuffers(window);
         }

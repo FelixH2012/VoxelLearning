@@ -1,16 +1,20 @@
 package de.felix.game.rendering.worldRenderer;
 
 import de.felix.game.noise.FastNoiseLite;
-import de.felix.game.rendering.Rectangle;
+import de.felix.game.rendering.Cube;
 import de.felix.game.rendering.camera.Camera;
+import de.felix.game.rendering.worldRenderer.chunk.Chunk;
+import de.felix.game.rendering.worldRenderer.world.World;
 import de.felix.game.shader.ShaderProgram;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL20;
+import org.joml.Vector3i;
 
 public class WordRenderer {
 
-    public WordRenderer() {
+    private final World world;
 
+    public WordRenderer() {
+        this.world = new World();
     }
 
     private final int[] indices = new int[]{
@@ -24,39 +28,52 @@ public class WordRenderer {
 
     private ShaderProgram shaderProgram;
 
-    public void render(final int numberOfCubes, final Camera camera) {
+    public void render(final Camera camera) {
 
         if (shaderProgram == null)
-          shaderProgram =   new ShaderProgram("resources/vertexShader.glsl", "resources/fragmentShader.glsl");
+            shaderProgram = new ShaderProgram("resources/vertexShader.glsl", "resources/fragmentShader.glsl");
         final FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         noise.SetFractalGain(.2f);
         noise.SetFractalWeightedStrength(0.5f);
 
-        final double[] noiseForEachCube = new double[numberOfCubes];
+        Vector3i cameraChunkPosition = new Vector3i((int) Math.floor(camera.getPosition().x / 16.0),(int) Math.floor(camera.getPosition().y / 16.0), (int) Math.floor(camera.getPosition().z / 16.0));
 
-        for (int i = 0; i < numberOfCubes; i++) {
-            noiseForEachCube[i] = noise.GetNoise(i, i, i);
+
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    Vector3i chunkPosition = new Vector3i(
+                            cameraChunkPosition.x + x,
+                            cameraChunkPosition.y + y / 16,
+                            cameraChunkPosition.z + z
+                    );
+
+                    Chunk chunk = world.getOrCreateChunk(chunkPosition);
+                    if (chunk == null)
+                        continue;
+
+                    renderChunk(chunk, camera);
+                }
+            }
         }
+    }
 
-        Vector3f[] cubePositions = new Vector3f[numberOfCubes];
-        for (int i = 0; i < numberOfCubes; i++) {
-            float x = (float) i;
-            float y = (float) (-5 + noiseForEachCube[i] * 100);
+    private void renderChunk(Chunk chunk, final Camera camera) {
+        int[][][] blocks = chunk.getBlocks();
+        Vector3i chunkPosition = chunk.getPosition();
 
-            float z = (float) i;
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                for (int z = 0; z < 16; z++) {
+                    int block = blocks[x][y][z];
+                    if (block != 0) {
+                        Vector3f blockPosition = new Vector3f(chunkPosition.x * 16 + x, chunkPosition.y * 16 + y, chunkPosition.z * 16 + z);
+                        Cube cube = new Cube(indices, shaderProgram, camera);
+                        cube.render((int) blockPosition.x, (int) blockPosition.y, (int) blockPosition.z);
 
-            cubePositions[i] = new Vector3f(x, y, z);
-        }
-
-        final Rectangle[] rectangles = new Rectangle[numberOfCubes];
-        for (int i = 0; i < numberOfCubes; i++) {
-
-            rectangles[i] = new Rectangle(indices, shaderProgram, camera);
-        }
-        for (int lines = 0; lines < numberOfCubes; lines++) {
-            for (int i = 0; i < numberOfCubes; i++) {
-                rectangles[i].render((int) cubePositions[i].x, (int) cubePositions[i].y, lines);
+                    }
+                }
             }
         }
     }
